@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<style>
+ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;
+  font-family:monospace;font-size:11px;color:#dff5ec;-webkit-user-select:none}
+ #box{position:absolute;inset:0;background:rgba(4,12,16,.84);
+  border:1px solid rgba(0,255,168,.35);border-radius:10px;overflow:hidden}
+ #h{background:rgba(0,255,168,.16);padding:7px 10px;font-weight:bold;color:#00ffa8}
+ #b{padding:8px 10px;overflow-y:auto;height:calc(100% - 30px)}
+ .row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+ .row label{flex:0 0 74px;color:#8fb8ac}
+ .row input[type=range]{flex:1;accent-color:#00ffa8;height:14px}
+ .row b{flex:0 0 34px;text-align:right;color:#fff}
+ .tg{display:flex;gap:6px;margin-bottom:7px}
+ .tg button{flex:1;font:inherit;font-size:10px;padding:5px 0;border-radius:6px;cursor:pointer;
+  border:1px solid rgba(0,255,168,.4);background:transparent;color:#8fb8ac}
+ .tg button.on{background:#00ffa8;color:#04140f;font-weight:bold}
+ #st{margin-top:6px;font-size:10px;color:#8fb8ac}
+ .ok{color:#00ffa8}.no{color:#ff5a76}
+</style></head><body><div id="box">
+<div id="h">HEADLOCK - geser dari sini</div>
+<div id="b">
+ <div class="tg">
+  <button id="bOn" class="on">AIM</button>
+  <button id="bGd" class="on">PANDU</button>
+  <button id="bDb" class="on">DEBUG</button>
+ </div>
+ <div class="row"><label>radius</label><input type="range" id="sR" min="20" max="600" value="200"><b id="vR">200</b></div>
+ <div class="row"><label>kecerahan</label><input type="range" id="sT" min="120" max="250" value="190"><b id="vT">190</b></div>
+ <div class="row"><label>offset kepala</label><input type="range" id="sO" min="5" max="90" value="35"><b id="vO">.035</b></div>
+ <div class="row"><label>lead</label><input type="range" id="sL" min="0" max="300" value="0"><b id="vL">0.0</b></div>
+ <div class="row"><label>geser X</label><input type="range" id="sX" min="-200" max="200" value="0"><b id="vX">0</b></div>
+ <div class="row"><label>geser Y</label><input type="range" id="sY" min="-200" max="200" value="0"><b id="vY">0</b></div>
+ <div id="st">memuat...</div>
+</div></div>
+<script>
+const $=i=>document.getElementById(i);
+function bind(id,vid,key,fmt,scale){
+ const s=$(id);
+ s.oninput=()=>{const v=+s.value;$(vid).textContent=fmt(v);
+  Native.set(key, scale?v*scale:v);};
+}
+bind('sR','vR','radius',v=>v);
+bind('sT','vT','thresh',v=>v);
+bind('sO','vO','hoff',v=>(v/1000).toFixed(3),0.001);
+bind('sL','vL','lead',v=>(v/100).toFixed(1),0.01);
+bind('sX','vX','offX',v=>v);
+bind('sY','vY','offY',v=>v);
+
+function tog(id,key,label){
+ const b=$(id);let on=b.classList.contains('on');
+ const paint=()=>{b.className=on?'on':'';b.textContent=label+(on?' ON':' OFF');};
+ paint();
+ b.onclick=()=>{on=!on;paint();Native.toggle(key,on);};
+}
+tog('bOn','on','AIM');tog('bGd','guide','PANDU');tog('bDb','dbg','DEBUG');
+
+let px=0,py=0;
+$('h').addEventListener('touchstart',e=>{px=e.touches[0].clientX;py=e.touches[0].clientY;},{passive:true});
+$('h').addEventListener('touchmove',e=>{e.preventDefault();
+ const x=e.touches[0].clientX,y=e.touches[0].clientY;
+ Native.drag(x-px,y-py);px=x;py=y;},{passive:false});
+
+setInterval(()=>{
+ try{const o=JSON.parse(Native.info());
+  $('st').innerHTML='musuh: <span class="'+(o.found?'ok':'no')+'">'+
+   (o.found?'TERDETEKSI':'tidak ada')+'</span>';}catch(e){}
+},500);
+</script></body></html>
